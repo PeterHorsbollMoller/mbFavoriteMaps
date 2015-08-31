@@ -1,0 +1,106 @@
+15:21:27    RBNTabGetGroupIndexThs: Looking for LayoutPage rbnTab = 486
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabLayoutBaseMaps but shown as 
+15:21:27    RBNTabGetGroupIndexThs: Looking for LayoutPage rbnTab = 507
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabLayoutBaseMaps but shown as 
+15:21:27    RBNTabGetGroupIndexThs: Looking for LayoutPage rbnTab = 527
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabLayoutBaseMaps but shown as 
+15:21:27 RBNSplitButtonGroupRemove from TabLayout
+15:21:27    Tab found: TabLayout searching for Group LayoutPage
+15:21:27    RBNTabGetGroupIndexThs: Looking for LayoutPage rbnTab = 546
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    Group found: LayoutPage searching for SplitButton sbtnTabLayoutBaseMaps
+15:21:27    Splitbutton found: sbtnTabLayoutBaseMaps searching for Group sbtngrpTabLayoutBaseMaps
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabLayoutBaseMaps but shown as 
+15:21:27    Group found: sbtngrpTabLayoutBaseMaps
+15:21:27    22 SplitButton Group Removed Result: 22
+15:21:27    RBNTabGetGroupIndexThs: Looking for LayoutPage rbnTab = 562
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNTabGetGroupIndexThs: Looking for MapFile rbnTab = 573
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabMapBaseMaps but shown as 
+15:21:27    RBNTabGetGroupIndexThs: Looking for MapFile rbnTab = 592
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabMapBaseMaps but shown as 
+15:21:27    RBNTabGetGroupIndexThs: Looking for MapFile rbnTab = 610
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabMapBaseMaps but shown as 
+15:21:27 RBNSplitButtonGroupRemove from TabMap
+15:21:27    Tab found: TabMap searching for Group MapFile
+15:21:27    RBNTabGetGroupIndexThs: Looking for MapFile rbnTab = 627
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    Group found: MapFile searching for SplitButton sbtnTabMapBaseMaps
+15:21:27    Splitbutton found: sbtnTabMapBaseMaps searching for Group sbtngrpTabMapBaseMaps
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabMapBaseMaps but shown as 
+15:21:27    Group found: sbtngrpTabMapBaseMaps
+15:21:27    17 SplitButton Group Removed Result: 17
+15:21:27    RBNTabGetGroupIndexThs: Looking for MapFile rbnTab = 641
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNTabGetGroupIndexThs: Looking for TableData rbnTab = 651
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabTableBaseMaps but shown as 
+15:21:27    RBNTabGetGroupIndexThs: Looking for TableData rbnTab = 669
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabTableBaseMaps but shown as 
+15:21:27    RBNTabGetGroupIndexThs: Looking for TableData rbnTab = 686
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabTableBaseMaps but shown as 
+15:21:27 RBNSplitButtonGroupRemove from TabTable
+15:21:27    Tab found: TabTable searching for Group TableData
+15:21:27    RBNTabGetGroupIndexThs: Looking for TableData rbnTab = 702
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    Group found: TableData searching for SplitButton sbtnTabTableBaseMaps
+15:21:27    Splitbutton found: sbtnTabTableBaseMaps searching for Group sbtngrpTabTableBaseMaps
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabTableBaseMaps but shown as 
+15:21:27    Group found: sbtngrpTabTableBaseMaps
+15:21:27    12 SplitButton Group Removed Result: 12
+15:21:27    RBNTabGetGroupIndexThs: Looking for TableData rbnTab = 715
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 6
+15:21:27    RBNTabGetGroupIndexThs: Looking for HomeFile rbnTab = 724
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 5
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabHomeBaseMaps but shown as 
+15:21:27    RBNTabGetGroupIndexThs: Looking for HomeFile rbnTab = 746
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 5
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabHomeBaseMaps but shown as 
+15:21:27    RBNTabGetGroupIndexThs: Looking for HomeFile rbnTab = 767
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 5
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabHomeBaseMaps but shown as 
+15:21:27 RBNSplitButtonGroupRemove from TabHome
+15:21:27    Tab found: TabHome searching for Group HomeFile
+15:21:27    RBNTabGetGroupIndexThs: Looking for HomeFile rbnTab = 787
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 5
+15:21:27    Group found: HomeFile searching for SplitButton sbtnTabHomeBaseMaps
+15:21:27    Splitbutton found: sbtnTabHomeBaseMaps searching for Group sbtngrpTabHomeBaseMaps
+15:21:27    RBNSplitButtonGetGroupIndexThs: Number of SplitButton Groups 1
+15:21:27    SplitButton Group 0 is named sbtngrpTabHomeBaseMaps but shown as 
+15:21:27    Group found: sbtngrpTabHomeBaseMaps
+15:21:27    7 SplitButton Group Removed Result: 7
+15:21:27    RBNTabGetGroupIndexThs: Looking for HomeFile rbnTab = 804
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 5
+15:21:27    RBNTabGetGroupIndexThs: Looking for grpFavoriteMaps rbnTab = 824
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 1
+15:21:27    RBNTabGetGroupIndexThs: Looking for grpFavoriteMaps rbnTab = 839
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 1
+15:21:27    RBNTabGetGroupIndexThs: Looking for grpFavoriteMaps rbnTab = 853
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 1
+15:21:27    RBNTabGetGroupIndexThs: Looking for grpFavoriteMaps rbnTab = 866
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 1
+15:21:27    RBNTabGetGroupIndexThs: Looking for grpFavoriteMaps rbnTab = 878
+15:21:27    RBNTabGetGroupIndexThs: Number of Tab Groups 1
