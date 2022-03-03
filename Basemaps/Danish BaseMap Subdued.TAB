@@ -1,0 +1,13 @@
+﻿!table
+!version 1600
+!charset UTF-8
+
+Definition Table
+  File "Danish BaseMap Subdued.xml"
+  Type "TILESERVER"
+  CoordSys Earth Projection 8, 115, "m", 9, 0, 0.9996, 500000, 0 Bounds (62747.9925, 5661139.2) (1378291.2, 6531717.643)
+begin_metadata
+"\IsReadOnly" = "FALSE"
+"\MapInfo" = ""
+"\MapInfo\TableID" = "d5b01c03-1b14-4dbf-abfa-40ca57771eac"
+end_metadata

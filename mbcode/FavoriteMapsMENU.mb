@@ -15,14 +15,16 @@ Include "Menu.def"
 Include "Library\Defaults.def"
 
 Define xProgram 		"FavoriteMaps"
-Define xVersion 		"1.01"
-Define xYear			"2015"
+Define xVersion 		"1.1.0"
+Define xYear			"2022"
 Define xAddToMenuBar	FALSE
 
 Define FILE_INI			ApplicationDirectory$() & xProgram & ".ini"
 Define FILE_DBG			ApplicationDirectory$() & xProgram & ".dbg"
 'Define FILE_DLL			ApplicationDirectory$() & xProgram & ".dll"
 Define FILE_PAD			GetFolderPath$(FOLDER_MI_PREFERENCE) & xProgram & ".btp"
+
+Define FILE_IMAGE_DEFAULT	ApplicationDirectory$() & "Images\BaseMap_Grey_32x32.png"
 
 Include "Enums.def"
 
@@ -41,12 +43,23 @@ Include "Library\Types\T_LAYER_SETTINGS.def"
 Include "Library\Types\T_LABEL_SETTINGS.def"
 Include "Library\Types\T_LAYER_INFO.def"
 
-Type T_BASE_MAP
-	sName 		As String
-	sImageFile	As String
-	sTabFile		As String
-	sLyrSettings	As String
-	sLblSettings	As String
+Include "DLGFMCFavoriteMapConfig.def"
+
+Type T_COMMAND_FAVORITE_MAP
+	nCommandId			As Integer
+	nFavoriteMapItem		As Integer
+End Type
+
+Type T_FAVORITE_GROUP
+	sCaption				As String
+	arrNames()			As String		'One name for each tab the controls are added to
+End Type
+
+Type T_ADD_TO_RIBBON
+	sTabName				As String
+	sGroupName			As String
+	sAddAfterControlName	As String
+	sAddBeforeControlName	As String
 End Type
 
 Declare Sub Main
@@ -55,24 +68,29 @@ Declare Sub EndHandler
 Declare Sub MENUReadConfigFile
 
 Declare Sub MENUOpenFavoriteMap(ByVal nItem As Integer)
-Declare Sub MENUOpenFavoriteMap1
-Declare Sub MENUOpenFavoriteMap2
-Declare Sub MENUOpenFavoriteMap3
-Declare Sub MENUOpenFavoriteMap4
-Declare Sub MENUOpenFavoriteMap5
+Declare Sub MENUFavoriteMapClicked
 
+Declare Function MENUGetFavoriteGroupName( ByVal sCaption As String, ByVal nTab As Integer) As String
+Declare Function MENUGetFavoriteGroupItem( ByVal sCaption As String, ByVal nTab As Integer) As Integer
+Declare Sub MENUSetFavoriteGroupName( ByVal sCaption As String, ByVal nTab As Integer, ByVal sName As String)
+Declare Function MENUGetFavoriteMapItemFromTabFile( ByVal sTabFile As String) As Integer
+
+Declare Sub MENUAddFavoriteMapLC
+Declare Sub MENUModifyFavoriteMapLC
 Declare Sub MENUSaveLayerSettingsLC
 
-Dim	marrTabs(), marrGroups(), marrAfterControls(), marrBeforeControls() As String,
-	marrSplitButtonCtrlIDs(), marrFirstControlIDs() As Integer,
-	mnImageSize As Integer,
-	mbShowSaveLayerSettingMenu As Logical,
-	marrFavoriteMaps() As T_BASE_MAP
+Dim	mnImageSize, mnButtonWidth, mnWrapPanelWidth As Integer,
+	mbShowSaveLayerSettingMenu, mbShowAddLayerMenu As Logical,
+	msButtonCaption As String,
+	marrAddToRibbon() As T_ADD_TO_RIBBON,
+	marrFavoriteGroups() As T_FAVORITE_GROUP,
+	marrCommand2FavoriteMap() As T_COMMAND_FAVORITE_MAP,
+	marrFavoriteMaps() As T_FAVORITE_MAP
 '*************************************
 Sub Main
 
-Dim	nCtrlIdx, nTab, nCtrl As Integer,
-	sSplitButtonName, sSplitButtonGroupName As String
+Dim	nCtrlIdx, nTab, nCtrl, nCount, nGroupItem As Integer,
+	sDropDButtonName As String
 
 OnError GoTo ErrorOccured
 
@@ -89,38 +107,33 @@ OnError GoTo ErrorOccured
 	Call PRGISetApplicationVersion(xVersion)
 	Call PRGISetApplicationCopyrightYear(xYear)
 	Call PRGISetApplicationDevelopedBy("Peter Horsbøll Møller")
-	Call PRGISetCopyrightCompany("Pitney Bowes")
-	Call PRGISetWebPageName("mapinfo.com")
-	Call PRGISetWebPageURL("http://www.mapinfo.com")
 	Call PRGISetApplicationImageUri(MI_IMG_MAP_ADDBASEMAP_32)
-	Call PRGISetDescription("This tools lets you add shortcuts to your favorite maps or tables to the Ribbon interface")
-
-	Call RBNNotificationShow(PRGIGetApplicationName(), "Launching...", Notify_Info, 2000)
+	Call PRGISetDescription("This tools lets you add shortcuts to your favorite maps or tables to the Ribbon interface.")
 
 	Call MENUReadConfigFile
 
 	If Ubound(marrFavoriteMaps) = 0 Then
 		Note "Please add at least one favorite map to the configuration file: " & FILE_INI
 		End Program
-	ElseIf Ubound(marrTabs) = 0 Then
+	ElseIf Ubound(marrAddToRibbon) = 0 Then
 		Note "Please specify at least one tab to add the favorite maps to using the configuration file: " & FILE_INI
 		End Program
 	End If
 
-	'**Adding the Favorite Maps SplitButton to the required tabs
-	For nTab = 1 To Ubound(marrTabs)
-		If marrTabs(nTab) = "tabFavoriteMaps" Then
+	'**Adding the Favorite Maps DropDButton to the required tabs
+	For nTab = 1 To Ubound(marrAddToRibbon)
+		If marrAddToRibbon(nTab).sTabName = "tabFavoriteMaps" Then
 			'Call DEBUGPrint(nTab & ": Adding custom tab called FAVORITE MAPS")
-			If NOT RBNTabExists(marrTabs(nTab)) Then
-				nCtrlIdx = RBNAddTab(marrTabs(nTab), "FAVORITE MAPS", "F")
+			If NOT RBNTabExists(marrAddToRibbon(nTab).sTabName) Then
+				nCtrlIdx = RBNAddTab(marrAddToRibbon(nTab).sTabName, msButtonCaption, "F")
 				If nCtrlIdx = 0 Then
-					Note "An error occured while adding a new tab called & '" & marrTabs(nTab) & "' to the ribbon!"
+					Note "An error occured while adding a new tab called & '" & marrAddToRibbon(nTab).sTabName & "' to the ribbon!"
 					Exit Sub
 				End If
 			End If
 
-			If NOT RBNTabGroupExists(marrTabs(nTab), marrGroups(nTab)) Then
-				nCtrlIdx = RBNTabAddGroup(marrGroups(nTab), "Maps", marrTabs(nTab))
+			If NOT RBNTabGroupExists(marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName) Then
+				nCtrlIdx = RBNTabAddGroup(marrAddToRibbon(nTab).sGroupName, msButtonCaption, marrAddToRibbon(nTab).sTabName)
 				If NOT nCtrlIdx > 0 Then
 					Exit Sub
 				End If
@@ -128,75 +141,112 @@ OnError GoTo ErrorOccured
 
 			For nCtrl = 1 To Ubound(marrFavoriteMaps)
 				'Call DEBUGPrint(nCtrl & ": Button " & marrFavoriteMaps(nCtrl).sName & " to tab FAVORITE MAPS")
-				nCtrlIdx = RBNGroupAddButton("openBaseMap" & nCtrl, marrFavoriteMaps(nCtrl).sName, "", marrTabs(nTab), marrGroups(nTab))
+				nCtrlIdx = RBNGroupAddButton("openBaseMap" & nCtrl, marrFavoriteMaps(nCtrl).sName, "", marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName)
 				If nCtrlIdx > 0 Then
 					'Create & Set the button tooltip
-					Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Open basemap '" & marrFavoriteMaps(nCtrl).sName & "'", "")
+					Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), marrFavoriteMaps(nCtrl).sName, "")
 					'Set the button icon
 					Call RBNControlSetIconsIdx(nCtrlIdx, mnImageSize, "", marrFavoriteMaps(nCtrl).sImageFile)
 					'Set Custom MapBasic Handle to the button
-					Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "MENUOpenFavoriteMap" & nTab)
+					Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "MENUFavoriteMapClicked")
 
-					If marrFirstControlIDs(nTab) = 0 Then
-						marrFirstControlIDs(nTab) = RBNControlGetControlIDIdx(nCtrlIdx)
-					End If
+					nCount = Ubound(marrCommand2FavoriteMap) + 1
+					ReDim marrCommand2FavoriteMap(nCount)
+					marrCommand2FavoriteMap(nCount).nCommandId		= RBNControlGetControlIDIdx(nCtrlIdx)
+					marrCommand2FavoriteMap(nCount).nFavoriteMapItem	= nCtrl
+
 				End If
 			Next
 		Else
-			'Adding a splitbutton
-			sSplitButtonName	= "sbtn" & marrTabs(nTab) & "BaseMaps"
-			If marrAfterControls(nTab) <> "" Then
-				'Call DEBUGPrint(nTab & ": inserting splitbutton to the tab called " & marrTabs(nTab) & " after " & marrAfterControls(nTab))
-				nCtrlIdx	= RBNGroupInsertControlAfter(sSplitButtonName, "Basemaps", "", ControlType_SplitButton, marrTabs(nTab), marrGroups(nTab), marrAfterControls(nTab))
-			ElseIf marrBeforeControls(nTab) <> "" Then
-				'Call DEBUGPrint(nTab & ": inserting splitbutton to the tab called " & marrTabs(nTab) & " before " & marrBeforeControls(nTab))
-				nCtrlIdx	= RBNGroupInsertControlBefore(sSplitButtonName, "Basemaps", "", ControlType_SplitButton, marrTabs(nTab), marrGroups(nTab), marrBeforeControls(nTab))
+			'Adding a DropDButton
+			sDropDButtonName	= "sbtn" & marrAddToRibbon(nTab).sTabName & "FavoriteMaps"
+			If marrAddToRibbon(nTab).sAddAfterControlName <> "" Then
+				'Call DEBUGPrint(nTab & ": inserting DropDButton to the tab called " & marrAddToRibbon(nTab).sTabName & " after " & marrAddToRibbon(nTab).sAddAfterControlName)
+				nCtrlIdx	= RBNGroupInsertControlAfter(sDropDButtonName, msButtonCaption, "", ControlType_SplitButton, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, marrAddToRibbon(nTab).sAddAfterControlName)
+			ElseIf marrAddToRibbon(nTab).sAddBeforeControlName <> "" Then
+				'Call DEBUGPrint(nTab & ": inserting DropDButton to the tab called " & marrAddToRibbon(nTab).sTabName & " before " & marrAddToRibbon(nTab).sAddBeforeControlName)
+				nCtrlIdx	= RBNGroupInsertControlBefore(sDropDButtonName, msButtonCaption, "", ControlType_SplitButton, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, marrAddToRibbon(nTab).sAddBeforeControlName)
 			Else
-				'Call DEBUGPrint(nTab & ": Adding splitbutton to the tab called " & marrTabs(nTab))
-				nCtrlIdx	= RBNGroupAddControl(sSplitButtonName, "Basemaps", "", ControlType_SplitButton, marrTabs(nTab), marrGroups(nTab))
+				'Call DEBUGPrint(nTab & ": Adding DropDButton to the tab called " & marrAddToRibbon(nTab).sTabName)
+				nCtrlIdx	= RBNGroupAddControl(sDropDButtonName, msButtonCaption, "", ControlType_SplitButton, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName)
 			End If
 
 			If nCtrlIdx > 0 Then
 				'Set the button icon
 				Call RBNControlSetIconsIdx(nCtrlIdx, mnImageSize, "", marrFavoriteMaps(1).sImageFile)
-				'**Set the handler to match the handler of the first button
-				Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "MENUOpenFavoriteMap" & nTab)
-				'**Get the ID of the SplitButton - nneded in the handler
-				marrSplitButtonCtrlIDs(nTab)	= RBNControlGetControlIDIdx(nCtrlIdx)
+				Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "MENUFavoriteMapClicked")
+				nCount = Ubound(marrCommand2FavoriteMap) + 1
+				ReDim marrCommand2FavoriteMap(nCount)
+				marrCommand2FavoriteMap(nCount).nCommandId		= RBNControlGetControlIDIdx(nCtrlIdx)
+				marrCommand2FavoriteMap(nCount).nFavoriteMapItem	= 1
 
-				sSplitButtonGroupName		= "sbtngrp" & marrTabs(nTab) & "BaseMaps"
-				nCtrlIdx	= RBNSplitButtonAddGroup(sSplitButtonGroupName, "", marrTabs(nTab), marrGroups(nTab), sSplitButtonName)
+				For nCtrl = 1 To Ubound(marrFavoriteMaps)
 
-				If nCtrlIdx > 0 Then
-					For nCtrl = 1 To Ubound(marrFavoriteMaps)
-						'Call DEBUGPrint(nCtrl & ": Button " & marrFavoriteMaps(nCtrl).sName & " to splitbutton called " & sSplitButtonName)
-						nCtrlIdx = RBNSplitButtonGroupAddControl(sSplitButtonName & nCtrl, marrFavoriteMaps(nCtrl).sName, ""
-									, ControlType_Button, marrTabs(nTab), marrGroups(nTab), sSplitButtonName, sSplitButtonGroupName)
-						If nCtrlIdx > 0 Then
-							'Create & Set the button tooltip
-							Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Open basemap '" & marrFavoriteMaps(nCtrl).sName & "'", "")
-							'Set the button icon
-							Call RBNControlSetIconsIdx(nCtrlIdx, mnImageSize, "", marrFavoriteMaps(nCtrl).sImageFile)
-							'Set Custom MapBasic Handle to the button
-							Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "MENUOpenFavoriteMap" & nTab)
+					nGroupItem = MENUGetFavoriteGroupItem(marrFavoriteMaps(nCtrl).sCustomGroupName, nTab)
+					If marrFavoriteGroups(nGroupItem).arrNames(nTab) = "" Then
+						marrFavoriteGroups(nGroupItem).arrNames(nTab)	= "dbtnngrp_" & nGroupItem & "_" & PathToTableName$(marrFavoriteMaps(nCtrl).sCustomGroupName)
+'						Call DEBUGPrint("Adding new WrapPanel '" & marrFavoriteGroups(nGroupItem).arrNames(nTab) & "'")
 
-							If marrFirstControlIDs(nTab) = 0 Then
-								marrFirstControlIDs(nTab) = RBNControlGetControlIDIdx(nCtrlIdx)
-								Call DEBUGPrint("Tab " & nTab & " has Control " & marrFirstControlIDs(nTab) & " as first control")
-							End If
-						End If
-					Next
-				End If
+						'**Adding a WrapPanel to the new DropDButton
+						nCtrlIdx = RBNSplitButtonAddControl(marrFavoriteGroups(nGroupItem).arrNames(nTab), "", ControlType_WrapPanel, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, sDropDButtonName)
+						Call RBNControlSetOrientationIdx(nCtrlIdx, Orient_Horizontal)
+						Call RBNControlSetWidthIdx(nCtrlIdx, mnWrapPanelWidth)
+'						Call DEBUGPrint("New WrapPanel '" & marrFavoriteGroups(nGroupItem).arrNames(nTab) & "' added")
+					Else
+						'WrapPanel already added
+					End If
+
+'					Call DEBUGPrint("Adding Button '" & sDropDButtonName & "_" & nCtrl & "' to WrapPanel '" & marrFavoriteGroups(nGroupItem).arrNames(nTab) & "'")
+					nCtrlIdx = RBNSplitButtonGroupAddControl(sDropDButtonName & "_" & nCtrl, marrFavoriteMaps(nCtrl).sName, ""
+									, ControlType_Button, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, sDropDButtonName, marrFavoriteGroups(nGroupItem).arrNames(nTab))
+					If nCtrlIdx > 0 Then
+						'Create & Set the button tooltip
+						Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), marrFavoriteMaps(nCtrl).sName, "")
+						Call RBNControlSetIconsIdx(nCtrlIdx, mnImageSize, "", marrFavoriteMaps(nCtrl).sImageFile)
+						Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "MENUFavoriteMapClicked")
+						Call RBNControlSetWidthIdx(nCtrlIdx, mnButtonWidth)
+
+						nCount = Ubound(marrCommand2FavoriteMap) + 1
+						ReDim marrCommand2FavoriteMap(nCount)
+						marrCommand2FavoriteMap(nCount).nCommandId		= RBNControlGetControlIDIdx(nCtrlIdx)
+						marrCommand2FavoriteMap(nCount).nFavoriteMapItem	= nCtrl
+					End If
+'					Call DEBUGPrint("New Button '" & sDropDButtonName & "_" & nCtrl & "' added to '" & marrFavoriteGroups(nGroupItem).arrNames(nTab) & "'")
+				Next
 			End If
 		End If
 	Next
 
-	If mbShowSaveLayerSettingMenu Then
+	If mbShowSaveLayerSettingMenu And mbShowAddLayerMenu Then
 		Alter Menu ID M_SHORTCUT_LC_LAYERS
 			Add
+				"(-",
+				"Add layer to Favorite Maps"
+					HelpMsg "Add layer to Favorite Maps"
+					Calling MENUAddFavoriteMapLC,
+				"Modify Favorite Map"
+					HelpMsg "Modify Favorite Map"
+					Calling MENUModifyFavoriteMapLC,
 				"Save layer settings for Favorite Maps"
 					HelpMsg "Save layer setting for Favorite Maps"
 					Calling MENUSaveLayerSettingsLC
+	ElseIf mbShowSaveLayerSettingMenu Then
+		Alter Menu ID M_SHORTCUT_LC_LAYERS
+			Add
+				"(-",
+				"Modify Favorite Map"
+					HelpMsg "Modify Favorite Map"
+					Calling MENUModifyFavoriteMapLC,
+				"Save layer settings for Favorite Maps"
+					HelpMsg "Save layer setting for Favorite Maps"
+					Calling MENUSaveLayerSettingsLC
+	ElseIf mbShowAddLayerMenu Then
+		Alter Menu ID M_SHORTCUT_LC_LAYERS
+			Add
+				"(-",
+				"Add layer to Favorite Maps"
+					HelpMsg "Add layer to Favorite Maps"
+					Calling MENUAddFavoriteMapLC
 	End If
 
 	Exit Sub
@@ -223,13 +273,210 @@ ErrorOccured:
 End Sub
 
 '**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function MENUGetFavoriteGroupName( ByVal sCaption As String, ByVal nTab As Integer) As String
+
+Dim i As Integer
+
+OnError GoTo ErrorOccured
+
+MENUGetFavoriteGroupName = ""
+
+	For i = 1 To Ubound(marrFavoriteGroups)
+		If marrFavoriteGroups(i).sCaption = sCaption Then
+			MENUGetFavoriteGroupName = marrFavoriteGroups(i).arrNames(nTab)
+			Exit Function
+		End If
+	Next
+
+	'**Not found - using the name of the first group
+	MENUGetFavoriteGroupName = marrFavoriteGroups(1).arrNames(nTab)
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "MENUGetFavoriteGroupName")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function MENUGetFavoriteGroupItem( ByVal sCaption As String) As Integer
+
+Dim	i As Integer
+
+OnError GoTo ErrorOccured
+
+MENUGetFavoriteGroupItem = 0
+
+'	Call DEBUGPrint("Looking for " & sCaption & " amongst " & Ubound(marrFavoriteGroups) & " groups")
+	For i = 1 To Ubound(marrFavoriteGroups)
+		If marrFavoriteGroups(i).sCaption = sCaption Then
+'			Call DEBUGPrint("   was found as #" & i)
+			MENUGetFavoriteGroupItem = i
+			Exit Function
+		End If
+	Next
+
+	'**Not found - using the name of the first group
+'	Call DEBUGPrint("   wasn't found. Using #1")
+	MENUGetFavoriteGroupItem = 1
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "MENUGetFavoriteGroupItem")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub MENUSetFavoriteGroupName( ByVal sCaption As String, ByVal nTab As Integer, ByVal sName As String)
+
+Dim i As Integer
+
+OnError GoTo ErrorOccured
+
+	For i = 1 To Ubound(marrFavoriteGroups)
+		If marrFavoriteGroups(i).sCaption = sCaption Then
+			marrFavoriteGroups(i).arrNames(nTab)	= sName
+			Exit Sub
+		End If
+	Next
+
+	'**Not found - setting the name of the first group
+	marrFavoriteGroups(1).arrNames(nTab)	= sName
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "MENUSetFavoriteGroupName")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function MENUGetFavoriteMapItemFromTabFile( ByVal sTabFile As String) As Integer
+
+Dim	i As Integer
+
+OnError GoTo ErrorOccured
+
+MENUGetFavoriteMapItemFromTabFile = 0
+
+'	Call DEBUGPrint("Looking for " & sTabFile & " amongst " & Ubound(marrFavoriteMaps) & " maps")
+	For i = 1 To Ubound(marrFavoriteMaps)
+		If marrFavoriteMaps(i).sTabFile = sTabFile Then
+'			Call DEBUGPrint("   was found as #" & i)
+			MENUGetFavoriteMapItemFromTabFile = i
+			Exit Function
+		End If
+	Next
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "MENUGetFavoriteMapItemFromTabFile")
+	Call ERRShow()
+
+End Function
+
+
+'**********************************************************************************************''
 'Created by Peter Horsbøll Møller, Pitney Bowes Software
 'Parameters:
 '
 '**********************************************************************************************''
-Sub MENUSaveLayerSettingsLC
+Sub MENUAddFavoriteMapLC
 
-Dim	i, nMID, nLayers, nLayer, nMap, nMapFound As Integer,
+Dim	i, nMID, nLayers, nLayer, nMap As Integer,
+	tlbs As T_LABEL_SETTINGS,
+	tls As T_LAYER_SETTINGS
+
+OnError GoTo ErrorOccured
+
+	For i = 1 To LayerControlInfo(LC_INFO_SEL_COUNT)
+		nMID		= LayerControlSelectionInfo (i, LC_SEL_INFO_MAPWIN_ID)
+		nLayer	= LayerControlSelectionInfo(i, LC_SEL_INFO_LAYER_ID)
+
+		If NOT LayerInfo(nMID, nLayer, LAYER_INFO_TYPE) IN (LAYER_INFO_TYPE_COSMETIC, LAYER_INFO_TYPE_THEMATIC) Then
+
+			nMap	= Ubound(marrFavoriteMaps) + 1
+			ReDim marrFavoriteMaps(nMap)
+
+			marrFavoriteMaps(nMap).sName				= IIf(LayerInfo(nMID, nLayer, LAYER_INFO_FRIENDLYNAME)="", LayerInfo(nMID, nLayer, LAYER_INFO_NAME), LayerInfo(nMID, nLayer, LAYER_INFO_FRIENDLYNAME))
+			marrFavoriteMaps(nMap).sTabFile			= TableInfo(LayerInfo(nMID, nLayer, LAYER_INFO_NAME), TAB_INFO_TABFILE)
+			marrFavoriteMaps(nMap).sImageFile			= FILE_IMAGE_DEFAULT
+			marrFavoriteMaps(nMap).sCustomGroupName		= marrFavoriteGroups(1).sCaption
+
+			marrFavoriteMaps(nMap).bShowOnCustomList	= TRUE
+			marrFavoriteMaps(nMap).bShowOnOpenList		= TRUE
+
+			Call tlsGetInfo(nMID, nLayer, tls)
+			marrFavoriteMaps(nMap).sLyrSettings 		= tlsToString(tls)
+			Call tlbsGetInfo(nMID, nLayer, tlbs)
+			marrFavoriteMaps(nMap).sLblSettings 		= tlbsToString(tlbs)
+
+			Call DEBUGPrint("A1 Name:" & marrFavoriteMaps(nMap).sName & ".")
+			If DLGFMCFavoriteMapConfig(marrFavoriteMaps(nMap)) Then
+				Call DEBUGPrint("A2 Name:" & marrFavoriteMaps(nMap).sName & ".")
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "NAME", marrFavoriteMaps(nMap).sName)
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "IMAGEFILE", FILEGetRelativePath(ApplicationDirectory$(), marrFavoriteMaps(nMap).sImageFile))
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "TABFILE", FILEGetRelativePath(ApplicationDirectory$(), marrFavoriteMaps(nMap).sTabFile))
+
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "SHOWONOPENCTRL", IIf(marrFavoriteMaps(nMap).bShowOnOpenList, "1", "0"))
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "SHOWONCUSTOMCTRL", IIf(marrFavoriteMaps(nMap).bShowOnCustomList, "1", "0"))
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "CUSTOMGROUPNAME", marrFavoriteMaps(nMap).sCustomGroupName)
+
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "LAYERSETTING", marrFavoriteMaps(nMap).sLyrSettings)
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "LABELSETTING", marrFavoriteMaps(nMap).sLblSettings)
+
+				Call RBNNotificationShow(PRGIGetApplicationName(), "Map was added. It will appear when you restart the Favorite Maps add-in!", Notify_Info, 5000)
+			Else
+				nMap	= nMap - 1
+				ReDim marrFavoriteMaps(nMap)
+			End If
+		Else
+			Call RBNNotificationShowAtCursor(PRGIGetApplicationName(), "Cosmetic and Thematic layers can't be added as favorite maps!", Notify_Error, 5000)
+		End If
+	Next
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "MENUAddFavoriteMapLC")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Software
+'Parameters:
+'
+'**********************************************************************************************''
+Sub MENUModifyFavoriteMapLC
+
+Dim	i, nMID, nLayers, nLayer, nMap As Integer,
 	sTabFile As String,
 	tlbs As T_LABEL_SETTINGS,
 	tls As T_LAYER_SETTINGS
@@ -243,19 +490,75 @@ OnError GoTo ErrorOccured
 		If NOT LayerInfo(nMID, nLayer, LAYER_INFO_TYPE) IN (LAYER_INFO_TYPE_COSMETIC, LAYER_INFO_TYPE_THEMATIC) Then
 			sTabFile = TableInfo(LayerInfo(nMID, nLayer, LAYER_INFO_NAME), TAB_INFO_TABFILE)
 
-			For nMap = 1 To Ubound(marrFavoriteMaps)
-				If marrFavoriteMaps(nMap).sTabFile = sTabFile Then
-
+			nMap = MENUGetFavoriteMapItemFromTabFile(sTabFile)
+			If nMap > 0 Then
+				If DLGFMCFavoriteMapConfig(marrFavoriteMaps(nMap)) Then
 					Call tlsGetInfo(nMID, nLayer, tls)
 					marrFavoriteMaps(nMap).sLyrSettings = tlsToString(tls)
-					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS", "LAYERSETTING" & nMap, marrFavoriteMaps(nMap).sLyrSettings)
-
 					Call tlbsGetInfo(nMID, nLayer, tlbs)
 					marrFavoriteMaps(nMap).sLblSettings = tlbsToString(tlbs)
-					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS", "LABELSETTING" & nMap, marrFavoriteMaps(nMap).sLblSettings)
 
+					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "NAME", marrFavoriteMaps(nMap).sName)
+					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "IMAGEFILE", FILEGetRelativePath(ApplicationDirectory$(), marrFavoriteMaps(nMap).sImageFile))
+					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "TABFILE", FILEGetRelativePath(ApplicationDirectory$(), marrFavoriteMaps(nMap).sTabFile))
+
+					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "SHOWONOPENCTRL", IIf(marrFavoriteMaps(nMap).bShowOnOpenList, "1", "0"))
+					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "SHOWONCUSTOMCTRL", IIf(marrFavoriteMaps(nMap).bShowOnCustomList, "1", "0"))
+					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "CUSTOMGROUPNAME", marrFavoriteMaps(nMap).sCustomGroupName)
+
+					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "LAYERSETTING", marrFavoriteMaps(nMap).sLyrSettings)
+					Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "LABELSETTING", marrFavoriteMaps(nMap).sLblSettings)
 				End If
-			Next
+			Else
+				Call RBNNotificationShowAtCursor(PRGIGetApplicationName(), "No favorite map found for this tab file: " & sTabFile, Notify_Error, 5000)
+			End If
+		Else
+			Call RBNNotificationShowAtCursor(PRGIGetApplicationName(), "Cosmetic and Thematic layers can't be favorite maps!", Notify_Error, 5000)
+		End If
+	Next
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "MENUModifyFavoriteMapLC")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Software
+'Parameters:
+'
+'**********************************************************************************************''
+Sub MENUSaveLayerSettingsLC
+
+Dim	i, nMID, nLayers, nLayer, nMap As Integer,
+	sTabFile As String,
+	tlbs As T_LABEL_SETTINGS,
+	tls As T_LAYER_SETTINGS
+
+OnError GoTo ErrorOccured
+
+	For i = 1 To LayerControlInfo(LC_INFO_SEL_COUNT)
+		nMID		= LayerControlSelectionInfo (i, LC_SEL_INFO_MAPWIN_ID)
+		nLayer	= LayerControlSelectionInfo(i, LC_SEL_INFO_LAYER_ID)
+
+		If NOT LayerInfo(nMID, nLayer, LAYER_INFO_TYPE) IN (LAYER_INFO_TYPE_COSMETIC, LAYER_INFO_TYPE_THEMATIC) Then
+			sTabFile = TableInfo(LayerInfo(nMID, nLayer, LAYER_INFO_NAME), TAB_INFO_TABFILE)
+
+			nMap = MENUGetFavoriteMapItemFromTabFile(sTabFile)
+			If nMap > 0 Then
+				Call tlsGetInfo(nMID, nLayer, tls)
+				marrFavoriteMaps(nMap).sLyrSettings = tlsToString(tls)
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "LAYERSETTING", marrFavoriteMaps(nMap).sLyrSettings)
+
+				Call tlbsGetInfo(nMID, nLayer, tlbs)
+				marrFavoriteMaps(nMap).sLblSettings = tlbsToString(tlbs)
+				Call CONFIGWriteKey(FILE_INI, "FAVORITE MAPS " & nMap, "LABELSETTING", marrFavoriteMaps(nMap).sLblSettings)
+			Else
+				Call RBNNotificationShowAtCursor(PRGIGetApplicationName(), "No favorite map found for this tab file: " & sTabFile, Notify_Error, 5000)
+			End If
+		Else
+			Call RBNNotificationShowAtCursor(PRGIGetApplicationName(), "Cosmetic and Thematic layers can't be favorite maps!", Notify_Error, 5000)
 		End If
 	Next
 	Exit Sub
@@ -266,36 +569,47 @@ ErrorOccured:
 
 End Sub
 
-'*************************************
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Software
+'Parameters:
+'
+'**********************************************************************************************''
 Sub MENUOpenFavoriteMap(ByVal nItem As Integer)
 
 Dim	nMID, nLayer As Integer,
+	sTab As String,
 	tli As T_LAYER_INFO
 
 OnError GoTo ErrorOccured
 
-	Call DEBUGPrint("Trying to open item " & nItem)
+'	Call DEBUGPrint("Trying to open item " & nItem)
 
 	Call RBNNotificationShow(PRGIGetApplicationName(), "Opening Base Map '" & marrFavoriteMaps(nItem).sName & "'", Notify_Info, 2000)
 
-	Open Table marrFavoriteMaps(nItem).sTabFile
+	If Not FileExists(marrFavoriteMaps(nItem).sTabFile) Then
+		Note "Tab file doesn't exist: " & marrFavoriteMaps(nItem).sTabFile
+		Exit Sub
+	End If
+
+	Open Table marrFavoriteMaps(nItem).sTabFile Interactive
+	sTab = PathToTableName$(marrFavoriteMaps(nItem).sTabFile)
 
 	nMID = MAPFrontMostWindow()
 	If nMID = 0 Then
-		Map From PathToTableName$(marrFavoriteMaps(nItem).sTabFile)
+		Map From sTab
 		nMID = MAPFrontMostWindow()
 		nLayer = 1
 	Else
 		Add Map
 			Window nMID
 			Auto
-			Layer PathToTableName$(marrFavoriteMaps(nItem).sTabFile)
-		nLayer = LAYERGetLayerNumber(nMID, PathToTableName$(marrFavoriteMaps(nItem).sTabFile))
+			Layer sTab
+		nLayer = LAYERGetLayerNumber(nMID, sTab)
 	End If
 
 	If nLayer > 0 Then
 		tli.nMID	= nMID
-		tli.sName	= PathToTableName$(marrFavoriteMaps(nItem).sTabFile)
+		tli.sName	= sTab
 
 		If marrFavoriteMaps(nItem).sLyrSettings <> "" Then
 			If tlsFromString(tli.tlsLyrSettings, marrFavoriteMaps(nItem).sLyrSettings) Then
@@ -310,7 +624,7 @@ OnError GoTo ErrorOccured
 
 		If marrFavoriteMaps(nItem).sLyrSettings <> "" OR marrFavoriteMaps(nItem).sLblSettings <> "" Then
 			If tliApplyInfo(nMID, nLayer, tli) Then
-				Call DEBUGPrint("Layer and/or label settings were applied to the layer!")
+'				Call DEBUGPrint("Layer and/or label settings were applied to the layer!")
 			End If
 		End If
 	End If
@@ -323,139 +637,34 @@ ErrorOccured:
 
 End Sub
 
-'*************************************
-Sub MENUOpenFavoriteMap1
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub MENUFavoriteMapClicked
 
-Dim	nCtrl, nItem As Integer
+Dim	nMapItem, nCtrlID, nItem As Integer
 
 OnError GoTo ErrorOccured
 
-	nItem	= CommandInfo(CMD_INFO_TOOLBTN)
-	nCtrl	= 1
+	nCtrlID	= CommandInfo(CMD_INFO_TOOLBTN)
+'	Call DEBUGPrint("The user clicked on Ctrl ID " & nCtrlID)
 
-	Call DEBUGPrint("The user clicked on item " & nItem & " The first control for this is " & marrFirstControlIDs(nCtrl))
-	If nItem = marrSplitButtonCtrlIDs(nCtrl) Then
-		'**User clicked on the initial control on the SplitButton
-		nItem	= 1
-	Else
-		nItem	= nItem - marrFirstControlIDs(nCtrl) + 1
-	End If
+	For nItem = 1 To Ubound(marrCommand2FavoriteMap)
+		If marrCommand2FavoriteMap(nItem).nCommandId = nCtrlID Then
+			nMapItem = marrCommand2FavoriteMap(nItem).nFavoriteMapItem
+			Exit For
+		End If
+	Next
 
-	Call MENUOpenFavoriteMap(nItem)
+'	Call DEBUGPrint("... matching Map Item " & nMapItem & " " & marrFavoriteMaps(nMapItem).sName)
+	Call MENUOpenFavoriteMap(nMapItem)
 
 	Exit Sub
 '-------------------------
 ErrorOccured:
-	Call ERRCreate(Err(), Error$(), "MENUOpenFavoriteMap1")
-	Call ERRShow()
-
-End Sub
-
-'*************************************
-Sub MENUOpenFavoriteMap2
-
-Dim	nCtrl, nItem As Integer
-
-OnError GoTo ErrorOccured
-
-	nItem	= CommandInfo(CMD_INFO_TOOLBTN)
-	nCtrl	= 2
-
-	Call DEBUGPrint("The user clicked on item " & nItem & " The first control for this is " & marrFirstControlIDs(nCtrl))
-	If nItem = marrSplitButtonCtrlIDs(nCtrl) Then
-		'**User clicked on the initial control on the SplitButton
-		nItem	= 1
-	Else
-		nItem	= nItem - marrFirstControlIDs(nCtrl) + 1
-	End If
-
-	Call MENUOpenFavoriteMap(nItem)
-
-	Exit Sub
-'-------------------------
-ErrorOccured:
-	Call ERRCreate(Err(), Error$(), "MENUOpenFavoriteMap2")
-	Call ERRShow()
-
-End Sub
-
-'*************************************
-Sub MENUOpenFavoriteMap3
-
-Dim	nCtrl, nItem As Integer
-
-OnError GoTo ErrorOccured
-
-	nItem	= CommandInfo(CMD_INFO_TOOLBTN)
-	nCtrl	= 3
-
-	If nItem = marrSplitButtonCtrlIDs(nCtrl) Then
-		'**User clicked on the initial control on the SplitButton
-		nItem	= 1
-	Else
-		nItem	= nItem - marrFirstControlIDs(nCtrl) + 1
-	End If
-
-	Call MENUOpenFavoriteMap(nItem)
-
-	Exit Sub
-'-------------------------
-ErrorOccured:
-	Call ERRCreate(Err(), Error$(), "MENUOpenFavoriteMap3")
-	Call ERRShow()
-
-End Sub
-
-'*************************************
-Sub MENUOpenFavoriteMap4
-
-Dim	nCtrl, nItem As Integer
-
-OnError GoTo ErrorOccured
-
-	nItem	= CommandInfo(CMD_INFO_TOOLBTN)
-	nCtrl	= 4
-
-	If nItem = marrSplitButtonCtrlIDs(nCtrl) Then
-		'**User clicked on the initial control on the SplitButton
-		nItem	= 1
-	Else
-		nItem	= nItem - marrFirstControlIDs(nCtrl) + 1
-	End If
-
-	Call MENUOpenFavoriteMap(nItem)
-
-	Exit Sub
-'-------------------------
-ErrorOccured:
-	Call ERRCreate(Err(), Error$(), "MENUOpenFavoriteMap4")
-	Call ERRShow()
-
-End Sub
-
-'*************************************
-Sub MENUOpenFavoriteMap5
-
-Dim	nCtrl, nItem As Integer
-
-OnError GoTo ErrorOccured
-
-	nItem	= CommandInfo(CMD_INFO_TOOLBTN)
-	nCtrl	= 5
-
-	If nItem = marrSplitButtonCtrlIDs(nCtrl) Then
-		'**User clicked on the initial control on the SplitButton
-		nItem	= 1
-	Else
-		nItem	= nItem - marrFirstControlIDs(nCtrl) + 1
-	End If
-
-	Call MENUOpenFavoriteMap(nItem)
-
-	Exit Sub
-'-------------------------
-ErrorOccured:
-	Call ERRCreate(Err(), Error$(), "MENUOpenFavoriteMap5")
+	Call ERRCreate(Err(), Error$(), "MENUFavoriteMapClicked")
 	Call ERRShow()
 
 End Sub
@@ -467,43 +676,92 @@ End Sub
 '**********************************************************************************************''
 Sub MENUReadConfigFile
 
-Dim	i, nFile, nCount, nNoneFound As Integer,
-	sName, sImageFile, sTabFile, sLyrSettings, sLblSettings As String
+Dim	i, nMap, nCount, nNoneFound As Integer,
+	sName, sCaption, sImageFile, sTabFile As String
 
 OnError GoTo ErrorOccured
 
-'[FAVORITE MAPS]
-'NAME1=Basemap Colours
-'TABFILE1=BaseMaps\BaseMap.tab
-'IMAGEFILE1=Images\BaseMap_32x32.png
-'LAYERSETTING1=
-'LABELSETTING1=
+'[FAVORITE MAPS 1]
+'NAME=Basemap Colours
+'TABFILE=BaseMaps\BaseMap.tab
+'IMAGEFILE=Images\BaseMap_32x32.png
+'LAYERSETTING=
+'LABELSETTING=
 
-	Call DEBUGPrint("MENUReadConfigFile:" & FILE_INI)
+'	Call DEBUGPrint("MENUReadConfigFile:" & FILE_INI)
+
+	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOCUSTOMTAB") = "1" Then
+		i = i + 1
+		Redim marrAddToRibbon(i)
+		marrAddToRibbon(i).sTabName				= "tabFavoriteMaps"
+		marrAddToRibbon(i).sGroupName				= "grpFavoriteMaps"
+	End If
+	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOHOMETAB") = "1" Then
+		i = i + 1
+		Redim marrAddToRibbon(i)
+		marrAddToRibbon(i).sTabName				= TAB_HOME
+		marrAddToRibbon(i).sGroupName				= TAB_GROUP_HOME_FILE
+		marrAddToRibbon(i).sAddBeforeControlName	= "HomeSaveWorkspaceSplitButton"
+	End If
+	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOTABLETAB") = "1" Then
+		i = i + 1
+		Redim marrAddToRibbon(i)
+		marrAddToRibbon(i).sTabName				= TAB_TABLE
+		marrAddToRibbon(i).sGroupName				= TAB_GROUP_TABLE_DATA
+		marrAddToRibbon(i).sAddAfterControlName		= "TableFileOpenGallerySplitButton"
+	End If
+	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOMAPTAB") = "1" Then
+		i = i + 1
+		Redim marrAddToRibbon(i)
+		marrAddToRibbon(i).sTabName				= TAB_MAP
+		marrAddToRibbon(i).sGroupName				= TAB_GROUP_MAP_FILE
+		marrAddToRibbon(i).sAddAfterControlName		= "MapFileOpenGallerySplitButton"
+	End If
+	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOLAYOUTTAB") = "1" Then
+		i = i + 1
+		Redim marrAddToRibbon(i)
+		marrAddToRibbon(i).sTabName				= TAB_LAYOUT
+		marrAddToRibbon(i).sGroupName				= TAB_GROUP_LAYOUT_PAGE
+		marrAddToRibbon(i).sAddAfterControlName		= "LayoutFileOpenGallerySplitButton"
+	End If
+
+	If CONFIGReadKey(FILE_INI, "SETTINGS", "USELARGEICONS") = "1" Then
+		mnImageSize = CONTROL_SIZE_LARGE
+	Else
+		mnImageSize = CONTROL_SIZE_SMALL
+	End If
+
+	mnWrapPanelWidth	= Val(CONFIGReadKey(FILE_INI, "SETTINGS", "PANELWIDTH"))
+	mnWrapPanelWidth	= IIf(mnWrapPanelWidth < 50, 200, mnWrapPanelWidth)
+
+	mnButtonWidth		= Val(CONFIGReadKey(FILE_INI, "SETTINGS", "BUTTONWIDTH"))
+	mnButtonWidth		= IIf(mnButtonWidth < 10, 40, mnButtonWidth)
+
+	msButtonCaption	= CONFIGReadKey(FILE_INI, "SETTINGS", "BUTTONCAPTION")
+	msButtonCaption	= IIf(msButtonCaption = "", "Favorite Maps", msButtonCaption)
+
+	mbShowSaveLayerSettingMenu	= (CONFIGReadKey(FILE_INI, "SETTINGS", "SHOWSAVELAYERSETTINGMENU") = "1")
+	mbShowAddLayerMenu			= (CONFIGReadKey(FILE_INI, "SETTINGS", "SHOWADDLAYERMENU") = "1")
+
+	nMap			= 0
+	nCount 		= 0
 	Do While TRUE
-		nFile		= nFile + 1
-		sName		= CONFIGReadKey(FILE_INI, "FAVORITE MAPS", "NAME" & nFile)
-		sImageFile	= CONFIGReadKey(FILE_INI, "FAVORITE MAPS", "IMAGEFILE" & nFile)
-		sTabFile		= CONFIGReadKey(FILE_INI, "FAVORITE MAPS", "TABFILE" & nFile)
-		sLyrSettings	= CONFIGReadKey(FILE_INI, "FAVORITE MAPS", "LAYERSETTING" & nFile)
-		sLblSettings	= CONFIGReadKey(FILE_INI, "FAVORITE MAPS", "LABELSETTING" & nFile)
+		nMap			= nMap + 1
+		sCaption		= CONFIGReadKey(FILE_INI, "CUSTOM GROUPS", "CAPTION" & nMap)
 
-		Call DEBUGPrint(nCount & ": '" & sName & "', '" & sImageFile & "', '" & sTabFile & "'")
-		If sName <> "" AND sImageFile <> "" AND sTabFile <> "" Then
+		If sCaption <> "" Then
 			nCount = nCount + 1
-			Redim marrFavoriteMaps(nCount)
+			Redim marrFavoriteGroups(nCount)
 
-			marrFavoriteMaps(nCount).sName		= sName
-			marrFavoriteMaps(nCount).sImageFile	= FILEGetAbsolutePath(ApplicationDirectory$(), sImageFile)
-			marrFavoriteMaps(nCount).sTabFile		= FILEGetAbsolutePath(ApplicationDirectory$(), sTabFile)
-			marrFavoriteMaps(nCount).sLyrSettings	= sLyrSettings
-			marrFavoriteMaps(nCount).sLblSettings	= sLblSettings
+			marrFavoriteGroups(nCount).sCaption	= sCaption
+			Redim marrFavoriteGroups(nCount).arrNames(Ubound(marrAddToRibbon))
+			Call DLGFMCAddToCustomGroupNames(sCaption)
 
-			Call DEBUGPrint(nCount & ": '" & marrFavoriteMaps(nCount).sImageFile & "'")
+'			Call DEBUGPrint(nCount & ": '" & marrFavoriteGroups(nCount).sCaption & "'")
 
 			nNoneFound = 0
 		Else
-			Call DEBUGPrint(nFile & ": Not Found!")
+'			Call DEBUGPrint(nMap & ": Group Not Found!")
 			nNoneFound = nNoneFound + 1
 
 			If nNoneFound > 3 Then
@@ -512,68 +770,51 @@ OnError GoTo ErrorOccured
 		End If
 	Loop
 
-	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOOWNTAB") = "1" Then
-		i = i + 1
-		Redim marrTabs(i)
-		Redim marrGroups(i)
-		Redim marrAfterControls(i)
-		Redim marrBeforeControls(i)
-		marrTabs(i)			= "tabFavoriteMaps"
-		marrGroups(i)			= "grpFavoriteMaps"
-		marrAfterControls(i)	= ""
-	End If
-	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOHOMETAB") = "1" Then
-		i = i + 1
-		Redim marrTabs(i)
-		Redim marrGroups(i)
-		Redim marrAfterControls(i)
-		Redim marrBeforeControls(i)
-		marrTabs(i)			= TAB_HOME
-		marrGroups(i)			= TAB_GROUP_HOME_FILE
-'		marrAfterControls(i)	= "HomeFileOpenGallerySplitButton"
-		marrBeforeControls(i)	= "HomeSaveWorkspaceSplitButton"
-	End If
-	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOTABLETAB") = "1" Then
-		i = i + 1
-		Redim marrTabs(i)
-		Redim marrGroups(i)
-		Redim marrAfterControls(i)
-		Redim marrBeforeControls(i)
-		marrTabs(i)			= TAB_TABLE
-		marrGroups(i)			= TAB_GROUP_TABLE_DATA
-		marrAfterControls(i)	= "TableFileOpenGallerySplitButton"
-	End If
-	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOMAPTAB") = "1" Then
-		i = i + 1
-		Redim marrTabs(i)
-		Redim marrGroups(i)
-		Redim marrAfterControls(i)
-		Redim marrBeforeControls(i)
-		marrTabs(i)			= TAB_MAP
-		marrGroups(i)			= TAB_GROUP_MAP_FILE
-		marrAfterControls(i)	= "MapFileOpenGallerySplitButton"
-	End If
-	If CONFIGReadKey(FILE_INI, "SETTINGS", "ADDTOLAYOUTTAB") = "1" Then
-		i = i + 1
-		Redim marrTabs(i)
-		Redim marrGroups(i)
-		Redim marrAfterControls(i)
-		Redim marrBeforeControls(i)
-		marrTabs(i)			= TAB_LAYOUT
-		marrGroups(i)			= TAB_GROUP_LAYOUT_PAGE
-		marrAfterControls(i)	= "LayoutFileOpenGallerySplitButton"
+	If Ubound(marrFavoriteGroups) = 0 Then
+		Redim marrFavoriteGroups(1)
+		marrFavoriteGroups(1).sCaption	= msButtonCaption
+		Redim marrFavoriteGroups(1).arrNames(Ubound(marrAddToRibbon))
+		Call DLGFMCAddToCustomGroupNames("Favorite Maps")
 	End If
 
-	Redim marrSplitButtonCtrlIDs(i)
-	Redim marrFirstControlIDs(i)
+	nMap			= 0
+	nCount 		= 0
+	Do While TRUE
+		nMap			= nMap + 1
 
-	If CONFIGReadKey(FILE_INI, "SETTINGS", "USELARGEICONS") = "1" Then
-		mnImageSize = CONTROL_SIZE_LARGE
-	Else
-		mnImageSize = CONTROL_SIZE_SMALL
-	End If
+		sName		= CONFIGReadKey(FILE_INI, "FAVORITE MAPS " & nMap, "NAME")
+		sImageFile	= CONFIGReadKey(FILE_INI, "FAVORITE MAPS " & nMap, "IMAGEFILE")
+		sTabFile		= CONFIGReadKey(FILE_INI, "FAVORITE MAPS " & nMap, "TABFILE")
 
-	mbShowSaveLayerSettingMenu	= (CONFIGReadKey(FILE_INI, "SETTINGS", "SHOWSAVELAYERSETTINGMENU") = "1")
+'		Call DEBUGPrint(nCount & ": '" & sName & "', '" & sImageFile & "', '" & sTabFile & "'")
+		If sName <> "" AND sImageFile <> "" AND sTabFile <> "" Then
+
+			nCount = nCount + 1
+			Redim marrFavoriteMaps(nCount)
+
+			marrFavoriteMaps(nCount).sName			= sName
+			marrFavoriteMaps(nCount).sImageFile		= FILEGetAbsolutePath(ApplicationDirectory$(), sImageFile)
+			marrFavoriteMaps(nCount).sTabFile			= FILEGetAbsolutePath(ApplicationDirectory$(), sTabFile)
+
+			marrFavoriteMaps(nCount).sLyrSettings		= CONFIGReadKey(FILE_INI, "FAVORITE MAPS " & nMap, "LAYERSETTING")
+			marrFavoriteMaps(nCount).sLblSettings		= CONFIGReadKey(FILE_INI, "FAVORITE MAPS " & nMap, "LABELSETTING")
+
+			marrFavoriteMaps(nCount).bShowOnOpenList	= (CONFIGReadKey(FILE_INI, "FAVORITE MAPS " & nMap, "SHOWONOPENCTRL") = "1")
+			marrFavoriteMaps(nCount).bShowOnCustomList	= (CONFIGReadKey(FILE_INI, "FAVORITE MAPS " & nMap, "SHOWONCUSTOMCTRL") = "1")
+			marrFavoriteMaps(nCount).sCustomGroupName	= CONFIGReadKey(FILE_INI, "FAVORITE MAPS " & nMap, "CUSTOMGROUPNAME")
+
+'			Call DEBUGPrint(nCount & ": '" & marrFavoriteMaps(nCount).sImageFile & "'")
+
+			nNoneFound = 0
+		Else
+'			Call DEBUGPrint(nMap & ": Map Not Found!")
+			nNoneFound = nNoneFound + 1
+
+			If nNoneFound > 3 Then
+				Exit Do
+			End If
+		End If
+	Loop
 
 	Exit Sub
 '-------------------------

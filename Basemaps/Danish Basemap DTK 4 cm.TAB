@@ -3,11 +3,12 @@
 !charset WindowsLatin1
 
 Definition Table
-  File "BaseMap Subdued.xml"
+  File "Danish Basemap DTK 4 cm.xml"
   Type "WMS"
   CoordSys Earth Projection 8, 115, "m", 9, 0, 0.9996, 500000, 0
+ Charset "WindowsLatin1"
 begin_metadata
 "\IsReadOnly" = "FALSE"
 "\MapInfo" = ""
-"\MapInfo\TableID" = "f4ce25cc-e462-46dc-8e2e-f55d1c6edb78"
+"\MapInfo\TableID" = "2cd38892-8c95-40d5-b53e-008ce777b1f9"
 end_metadata

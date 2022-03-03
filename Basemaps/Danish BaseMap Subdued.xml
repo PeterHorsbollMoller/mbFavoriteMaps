@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TileServerInfo Type="WMTS">
+  <CapabilitiesUrl>https://services.datafordeler.dk/DKskaermkort/topo_skaermkort_daempet/1.0.0/WMTS?username=KTZOFGUUBM&amp;password=MapInfo-2021&amp;request=GetCapabilities&amp;service=WMTS&amp;version=1.0.0</CapabilitiesUrl>
+  <Version>1.0.0</Version>
+  <GetTilesUrl>https://services.datafordeler.dk/DKskaermkort/topo_skaermkort_daempet/1.0.0/Wmts?username=KTZOFGUUBM&amp;password=MapInfo-2021&amp;service=WMTS&amp;request=GetTile&amp;version=1.0.0&amp;layer=topo_skaermkort_daempet&amp;style=default&amp;format=image/jpeg&amp;tileMatrixSet=View1&amp;tileMatrix={TileMatrix}&amp;TileRow={TileRow}&amp;TileCol={TileCol}</GetTilesUrl>
+</TileServerInfo>

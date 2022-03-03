@@ -1,0 +1,14 @@
+!table
+!version 950
+!charset WindowsLatin1
+
+Definition Table
+  File "Danish Basemap DTK 2 cm.xml"
+  Type "WMS"
+  CoordSys Earth Projection 10, 157, "m", 0
+ Charset "WindowsLatin1"
+begin_metadata
+"\IsReadOnly" = "FALSE"
+"\MapInfo" = ""
+"\MapInfo\TableID" = "62709fbc-0cb5-467f-a770-41b6397e8c4c"
+end_metadata

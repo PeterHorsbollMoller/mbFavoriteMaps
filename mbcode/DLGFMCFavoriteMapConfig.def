@@ -1,0 +1,13 @@
+﻿Type T_FAVORITE_MAP
+	sName 				As String
+	sImageFile			As String
+	sTabFile				As String
+	sLyrSettings			As String
+	sLblSettings			As String
+	bShowOnCustomList		As Logical
+	sCustomGroupName		As String
+	bShowOnOpenList		As Logical
+End Type
+
+Declare Function DLGFMCFavoriteMapConfig( tFavoriteMap As T_FAVORITE_MAP) As Logical
+Declare Sub DLGFMCAddToCustomGroupNames( ByVal sGroupName As String)

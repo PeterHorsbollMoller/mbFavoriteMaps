@@ -3,11 +3,12 @@
 !charset WindowsLatin1
 
 Definition Table
-  File "BaseMap Grey.xml"
+  File "Danish Basemap 1953-1976.xml"
   Type "WMS"
   CoordSys Earth Projection 8, 115, "m", 9, 0, 0.9996, 500000, 0
+ Charset "WindowsLatin1"
 begin_metadata
 "\IsReadOnly" = "FALSE"
 "\MapInfo" = ""
-"\MapInfo\TableID" = "5dc1fd5d-faf5-4db0-b774-a7c41f6a8937"
+"\MapInfo\TableID" = "3250695a-5b74-45fe-b203-c3e65227c553"
 end_metadata

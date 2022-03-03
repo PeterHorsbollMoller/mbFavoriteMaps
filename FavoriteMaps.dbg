@@ -1,37 +1,24 @@
-14:14:22 3: '', '', ''
-14:14:22 5: Not Found!
-14:14:22 3: '', '', ''
-14:14:22 6: Not Found!
-14:14:22 3: '', '', ''
-14:14:22 7: Not Found!
-14:14:22 Tab 1 has Control 10069 as first control
-14:14:22 Tab 2 has Control 10074 as first control
-14:14:23 Tab 3 has Control 10079 as first control
-14:14:23 Tab 4 has Control 10084 as first control
-14:14:31 The user clicked on item 10070 The first control for this is 10069
-14:14:31 Trying to open item 2
-14:14:45 Trying to open item 3
-15:28:43 The user clicked on item 10069 The first control for this is 10069
-15:28:43 Trying to open item 1
-15:28:43 Layer and/or label settings were applied to the layer!
-15:11:43 MENUReadConfigFile:D:\Dropbox (Horsboll-Moller)\3. MB_Kode\mbFavoriteMaps\FavoriteMaps.ini
-15:11:43 0: 'Basemap Colours', 'Images\BaseMap_32x32.png', 'BaseMaps\BaseMap.tab'
-15:11:43 1: 'D:\Dropbox (Horsboll-Moller)\3. MB_Kode\mbFavoriteMaps\Images\BaseMap_32x32.png'
-15:11:43 1: 'Basemap Subdued', 'Images\BaseMap_Subdued_32x32.png', 'BaseMaps\BaseMap Subdued.tab'
-15:11:44 2: 'D:\Dropbox (Horsboll-Moller)\3. MB_Kode\mbFavoriteMaps\Images\BaseMap_Subdued_32x32.png'
-15:11:44 2: 'Basemap Grey', 'Images\BaseMap_Grey_32x32.png', 'BaseMaps\BaseMap Grey.tab'
-15:11:44 3: 'D:\Dropbox (Horsboll-Moller)\3. MB_Kode\mbFavoriteMaps\Images\BaseMap_Grey_32x32.png'
-15:11:44 3: '', '', ''
-15:11:44 4: Not Found!
-15:11:44 3: '', '', ''
-15:11:44 5: Not Found!
-15:11:44 3: '', '', ''
-15:11:44 6: Not Found!
-15:11:44 3: '', '', ''
-15:11:44 7: Not Found!
-15:11:44 Tab 1 has Control 10058 as first control
-15:11:44 Tab 2 has Control 10063 as first control
-15:11:44 Tab 3 has Control 10068 as first control
-15:11:44 Tab 4 has Control 10073 as first control
-15:11:52 The user clicked on item 10059 The first control for this is 10058
-15:11:52 Trying to open item 2
+11:14:56 Trying to open item 6
+11:14:57 Layer and/or label settings were applied to the layer!
+14:52:01 A1 Name:Danish_Basemap_1953_1976.
+14:52:01 B1 Name:Danish_Basemap_1953_1976.
+14:53:12 B2a Name:Danish_Basemap_1953_1976.
+14:53:12 B2b Name:Danish_Basemap_1953_1976.
+14:53:12 A2 Name:Danish_Basemap_1953_1976.
+14:55:36 A1 Name:Danish_Basemap_1980_2001.
+14:55:36 B1 Name:Danish_Basemap_1980_2001.
+14:56:25 B2a Name:Basemap 1980-2001.
+14:56:25 B2b Name:Basemap 1980-2001.
+14:56:25 A2 Name:Basemap 1980-2001.
+15:07:18 A1 Name:Danish_Basemap_DTK_2_cm.
+15:07:18 B1 Name:Danish_Basemap_DTK_2_cm.
+15:07:50 B2a Name:Basemap DTK 2 cm.
+15:07:50 B2b Name:Basemap DTK 2 cm.
+15:07:50 A2 Name:Basemap DTK 2 cm.
+15:07:57 A1 Name:Danish_Basemap_DTK_4_cm.
+15:07:57 B1 Name:Danish_Basemap_DTK_4_cm.
+15:08:16 B2a Name:Basemap DTK 4 cm.
+15:08:16 B2b Name:Basemap DTK 4 cm.
+15:08:16 A2 Name:Basemap DTK 4 cm.
+15:28:58 A1 Name:Danish_BaseMap.
+15:28:58 B1 Name:Danish_BaseMap.

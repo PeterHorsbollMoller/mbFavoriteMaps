@@ -16,5 +16,6 @@ Module=Library\Types\T_LAYER_SETTINGS.mbo
 Module=Library\Types\T_LABEL_SETTINGS.mbo
 Module=Library\Types\T_LAYER_INFO.mbo
 Module=FavoriteMapsMENU.mbo
+Module=DLGFMCFavoriteMapConfig.mbo
 
 
