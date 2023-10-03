@@ -1,5 +1,5 @@
 '============================================================================
-' MapInfo Pro 2100 - System defines
+' MapInfo Pro 2300 - System defines
 '----------------------------------------------------------------------------
 ' This file contains defines useful when programming in the MapBasic
 ' language.  There are three versions of this file:
@@ -463,6 +463,17 @@ Define LAYER_INFO_TIME_EXTENT_END               99
 Define LAYER_INFO_TIME_INTERVAL                 100
 Define LAYER_INFO_TIME_INTERVAL_UNIT            101
 Define LAYER_INFO_TIME_IGNORE_NULLS             102
+Define LAYER_INFO_VIS_EXPR_STATE                103
+Define LAYER_INFO_VIS_EXPR                      104
+Define LAYER_INFO_TIME_CONFIG_TYPE              105
+Define LAYER_INFO_VIS_EXPR_ISHIDDEN             106
+Define LAYER_INFO_WMS_DIM_TIME_START            107
+Define LAYER_INFO_WMS_DIM_TIME_END              108
+Define LAYER_INFO_WMS_DIM_TIME_SUPRT            109
+Define LAYER_INFO_WMS_DIM_TIME_EXT_START        110
+Define LAYER_INFO_WMS_DIM_TIME_EXT_END          111
+Define LAYER_INFO_WMS_DIM_TIME_UNIT	            112
+Define LAYER_INFO_WMS_DIM_TIME_INTERVAL         113
 
 '----------------------------------------------------------------------------
 ' Values returned by LayerInfo() for LAYER_INFO_LABEL_ORIENTATION and
@@ -482,6 +493,12 @@ Define LAYER_INFO_TIME_TYPE_DATETIME            2
 Define LAYER_INFO_TIME_TYPE_TIME                3
 Define LAYER_INFO_TIME_TYPE_DATEPLUSTIME        4
 Define LAYER_INFO_TIME_TYPE_DURATION            5     'for LAYER_INFO_TIME_END_TYPE only
+
+' for use with LAYER_INFO_TIME_CONFIG_TYPE
+Define LAYER_INFO_TIME_CONFIG_NONE         0
+Define LAYER_INFO_TIME_CONFIG_ROW          1
+Define LAYER_INFO_TIME_CONFIG_VISIBILITY   2
+Define LAYER_INFO_TIME_CONFIG_WMS          3
 
 '----------------------------------------------------------------------------
 ' Display Modes, returned by LayerInfo() for LAYER_INFO_DISPLAY
@@ -913,6 +930,8 @@ Define LAYOUT_ITEM_TYPE_CUSTOM                   7
 Define CONTEXT_WINDOWID                          1
 Define CONTEXT_PAGENUMBER                        2
 Define CONTEXT_FRAMENUMBER                       3
+Define CONTEXT_MAPWINDOWID                       4
+Define CONTEXT_LAYERID                           5
 
 '============================================================================
 ' LocateFile$() defines
@@ -1051,6 +1070,7 @@ Define MAPPER_INFO_TIME_CURRENT_END_EXTENT      62
 Define MAPPER_INFO_TIME_CUSTOM_TIMEPERIOD       63
 Define MAPPER_INFO_TIME_LAYER_N                 64
 Define MAPPER_INFO_TIME_SERIES_PLAYING          65
+Define MAPPER_INFO_TILE_SERVER_ZOOM_LEVEL       66
 
 '-----------------------------------------------------------------------------
 ' Time format types, retuned by MapperInfo() for MAPPER_INFO_TIME_FORMAT_TYPE
@@ -1219,6 +1239,13 @@ Define SEL_INFO_TABLENAME                       1
 Define SEL_INFO_SELNAME                         2
 Define SEL_INFO_NROWS                           3
 Define SEL_INFO_ISNEW                           4
+
+' NodeSelectionInfo() defines
+Define NODE_SEL_INFO_EXISTS      1
+Define NODE_SEL_INFO_CLOSED      2
+Define NODE_SEL_INFO_POLY        3
+Define NODE_SEL_INFO_STARTNODE   4
+Define NODE_SEL_INFO_ENDNODE     5
 
 '============================================================================
 ' Server statement and function defines
@@ -1390,6 +1417,7 @@ Define SYS_INFO_MIRIBBONSTATE_VERSION           25
 Define SYS_INFO_LICENSE_MODE                    26
 Define SYS_INFO_SUBSCRIPTION_PLAN               27
 Define SYS_INFO_SQL_VERSION                     28
+Define SYS_INFO_CSYS_DLG_VERSION_OLD            29
 
 '----------------------------------------------------------------------------
 ' Platform, returned by SystemInfo() for SYS_INFO_PLATFORM
@@ -1483,6 +1511,7 @@ Define TAB_INFO_NUM_BASETABLES                  58
 Define TAB_INFO_BASETABLE_ALIASES               59
 Define TAB_INFO_DOMINANT_OBJECT_TYPE            60
 Define TAB_INFO_ISFILTER                        61
+Define TAB_INFO_ROWS_PACK_NEEDED                62
 
 '----------------------------------------------------------------------------
 ' Table type defines, returned by TableInfo() for TAB_INFO_TYPE

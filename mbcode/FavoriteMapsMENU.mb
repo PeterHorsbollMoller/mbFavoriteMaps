@@ -5,6 +5,8 @@
 '**
 '*******************************************************************************
 '	31-08-2015 11:30:41	- Recompiled and Linked with the latest mbLibrary modules
+'	03-10-2023 07:41:50 - Support for specifying PuttonType in Config File: ControlType_DropDownButton or ControlType_SplitButton
+'					- Support for specifying PanelType in Config File: ControlType_DropDownMenuGroup, ControlType_StackPanel, ControlType_WrapPanel
 '*******************************************************************************
 
 '-------------------------------------
@@ -15,8 +17,8 @@ Include "Menu.def"
 Include "Library\Defaults.def"
 
 Define xProgram 		"FavoriteMaps"
-Define xVersion 		"1.1.0"
-Define xYear			"2022"
+Define xVersion 		"1.2.0"
+Define xYear			"2023"
 Define xAddToMenuBar	FALSE
 
 Define FILE_INI			ApplicationDirectory$() & xProgram & ".ini"
@@ -79,7 +81,7 @@ Declare Sub MENUAddFavoriteMapLC
 Declare Sub MENUModifyFavoriteMapLC
 Declare Sub MENUSaveLayerSettingsLC
 
-Dim	mnImageSize, mnButtonWidth, mnWrapPanelWidth As Integer,
+Dim	mnImageSize, mnButtonWidth, mnWrapPanelWidth, mnButtonType, mnPanelType As Integer,
 	mbShowSaveLayerSettingMenu, mbShowAddLayerMenu As Logical,
 	msButtonCaption As String,
 	marrAddToRibbon() As T_ADD_TO_RIBBON,
@@ -158,17 +160,17 @@ OnError GoTo ErrorOccured
 				End If
 			Next
 		Else
-			'Adding a DropDButton
+			'Adding a DropDButton/SplitButton
 			sDropDButtonName	= "sbtn" & marrAddToRibbon(nTab).sTabName & "FavoriteMaps"
 			If marrAddToRibbon(nTab).sAddAfterControlName <> "" Then
 				'Call DEBUGPrint(nTab & ": inserting DropDButton to the tab called " & marrAddToRibbon(nTab).sTabName & " after " & marrAddToRibbon(nTab).sAddAfterControlName)
-				nCtrlIdx	= RBNGroupInsertControlAfter(sDropDButtonName, msButtonCaption, "", ControlType_SplitButton, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, marrAddToRibbon(nTab).sAddAfterControlName)
+				nCtrlIdx	= RBNGroupInsertControlAfter(sDropDButtonName, msButtonCaption, "", mnButtonType, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, marrAddToRibbon(nTab).sAddAfterControlName)
 			ElseIf marrAddToRibbon(nTab).sAddBeforeControlName <> "" Then
 				'Call DEBUGPrint(nTab & ": inserting DropDButton to the tab called " & marrAddToRibbon(nTab).sTabName & " before " & marrAddToRibbon(nTab).sAddBeforeControlName)
-				nCtrlIdx	= RBNGroupInsertControlBefore(sDropDButtonName, msButtonCaption, "", ControlType_SplitButton, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, marrAddToRibbon(nTab).sAddBeforeControlName)
+				nCtrlIdx	= RBNGroupInsertControlBefore(sDropDButtonName, msButtonCaption, "", mnButtonType, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, marrAddToRibbon(nTab).sAddBeforeControlName)
 			Else
 				'Call DEBUGPrint(nTab & ": Adding DropDButton to the tab called " & marrAddToRibbon(nTab).sTabName)
-				nCtrlIdx	= RBNGroupAddControl(sDropDButtonName, msButtonCaption, "", ControlType_SplitButton, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName)
+				nCtrlIdx	= RBNGroupAddControl(sDropDButtonName, msButtonCaption, "", mnButtonType, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName)
 			End If
 
 			If nCtrlIdx > 0 Then
@@ -188,7 +190,9 @@ OnError GoTo ErrorOccured
 '						Call DEBUGPrint("Adding new WrapPanel '" & marrFavoriteGroups(nGroupItem).arrNames(nTab) & "'")
 
 						'**Adding a WrapPanel to the new DropDButton
-						nCtrlIdx = RBNSplitButtonAddControl(marrFavoriteGroups(nGroupItem).arrNames(nTab), "", ControlType_WrapPanel, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, sDropDButtonName)
+						nCtrlIdx = RBNSplitButtonAddControl(marrFavoriteGroups(nGroupItem).arrNames(nTab), marrFavoriteMaps(nCtrl).sCustomGroupName, mnPanelType, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, sDropDButtonName)
+						'nCtrlIdx = RBNSplitButtonAddControl(marrFavoriteGroups(nGroupItem).arrNames(nTab), marrFavoriteMaps(nCtrl).sCustomGroupName, ControlType_DropDownMenuGroup, marrAddToRibbon(nTab).sTabName, marrAddToRibbon(nTab).sGroupName, sDropDButtonName)
+
 						Call RBNControlSetOrientationIdx(nCtrlIdx, Orient_Horizontal)
 						Call RBNControlSetWidthIdx(nCtrlIdx, mnWrapPanelWidth)
 '						Call DEBUGPrint("New WrapPanel '" & marrFavoriteGroups(nGroupItem).arrNames(nTab) & "' added")
@@ -742,6 +746,19 @@ OnError GoTo ErrorOccured
 
 	mbShowSaveLayerSettingMenu	= (CONFIGReadKey(FILE_INI, "SETTINGS", "SHOWSAVELAYERSETTINGMENU") = "1")
 	mbShowAddLayerMenu			= (CONFIGReadKey(FILE_INI, "SETTINGS", "SHOWADDLAYERMENU") = "1")
+
+	'ButtonType: 9=ControlType_DropDownButton, 10=ControlType_SplitButton
+	mnButtonType	= Val(CONFIGReadKey(FILE_INI, "SETTINGS", "BUTTONTYPE"))
+	If Not mnButtonType In (ControlType_DropDownButton, ControlType_SplitButton) Then
+		mnButtonType	= ControlType_SplitButton
+	End If
+
+	'PanelType: 11=ControlType_DropDownMenuGroup, 22=ControlType_StackPanel, 25=ControlType_WrapPanel
+	mnPanelType	= Val(CONFIGReadKey(FILE_INI, "SETTINGS", "PANELTYPE"))
+	If Not mnPanelType In (ControlType_DropDownMenuGroup, ControlType_StackPanel, ControlType_WrapPanel) Then
+		mnPanelType	= ControlType_WrapPanel
+	End If
+
 
 	nMap			= 0
 	nCount 		= 0
